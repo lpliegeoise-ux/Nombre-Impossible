@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f5f2ea">
+<title>Bloc-notes</title>
+<style>
+*{box-sizing:border-box} html,body{margin:0;min-height:100%;background:#f5f2ea;color:#222;font-family:Georgia,serif}
+body{padding:22px 28px 40px} h1{font-size:30px;font-weight:400;margin:0 0 18px}
+.note{max-width:900px;margin:auto;background:#fffdf8;min-height:92vh;padding:28px 42px;box-shadow:0 3px 20px #0002}
+.row{display:flex;align-items:end;gap:14px;margin:12px 0;border-bottom:1px solid #b8b0a2}
+.num{font-size:22px;width:30px;padding-bottom:8px;color:#777}
+input{flex:1;border:0;outline:0;background:transparent;font:42px Georgia,serif;padding:6px 4px 8px;min-width:0}
+button{font:18px Arial,sans-serif;border:1px solid #bbb;background:#fafafa;border-radius:10px;padding:10px 16px;margin-top:18px}
+#status{font:14px Arial,sans-serif;color:#777;margin-top:14px;min-height:20px}
+</style>
+</head>
+<body>
+<div class="note">
+<h1>Nombres proposés</h1>
+<div id="rows"></div>
+<button id="add">+ Ajouter une ligne</button>
+<div id="status"></div>
+</div>
+<script>
+const rows=document.getElementById('rows'), status=document.getElementById('status');
+let count=0, timer=null, lastSent='';
+function addRow(){
+ count++;
+ const d=document.createElement('div'); d.className='row';
+ d.innerHTML=`<div class="num">${count}.</div><input inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Nombre ${count}">`;
+ rows.appendChild(d);
+ d.querySelector('input').addEventListener('input', changed);
+}
+for(let i=0;i<6;i++) addRow();
+document.getElementById('add').onclick=()=>{addRow(); rows.lastElementChild.querySelector('input').focus();};
+function values(){
+ return [...rows.querySelectorAll('input')].map(x=>x.value.trim()).filter(Boolean)
+   .map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=1000);
+}
+function changed(){
+ clearTimeout(timer);
+ status.textContent='';
+ timer=setTimeout(sendTotal,700);
+}
+async function sendTotal(){
+ const all=[...rows.querySelectorAll('input')].map(x=>x.value.trim()).filter(Boolean);
+ const nums=values();
+ if(!all.length || nums.length!==all.length){status.textContent='Chaque nombre doit être compris entre 1 et 1000.';return;}
+ const key=nums.join(',');
+ if(key===lastSent)return;
+ const total=nums.reduce((a,b)=>a+b,0);
+ const payload={type:'sum',count:nums.length,total,ts:Date.now()};
+ try{
+   await fetch('https://ntfy.sh/nombre-impossible-22d43931559b',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+   lastSent=key; status.textContent='Nombres enregistrés';
+ }catch(e){status.textContent='Connexion momentanément indisponible';}
+}
+</script>
+</body></html>
