@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title></title>
+<style>
+*{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}
+body{position:fixed;inset:0;user-select:none;-webkit-user-select:none}
+#total{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:max(10px,env(safe-area-inset-top));
+color:#242424;background:#000;font:700 clamp(52px,18vw,140px) Arial,sans-serif;letter-spacing:-.04em;opacity:0}
+#total.show{opacity:1}
+</style>
+</head>
+<body><div id="total"></div>
+<script>
+const el=document.getElementById('total'); let lastId='';
+async function poll(){
+ try{
+  const r=await fetch('https://ntfy.sh/nombre-impossible-22d43931559b/json?poll=1&since=10s',{cache:'no-store'});
+  const t=await r.text();
+  for(const line of t.trim().split(/\n+/).filter(Boolean)){
+   let e; try{e=JSON.parse(line)}catch{continue}
+   if(e.event!=='message'||!e.message||e.id===lastId)continue;
+   lastId=e.id;
+   let p; try{p=JSON.parse(e.message)}catch{continue}
+   if(p.type==='sum'&&Number.isFinite(Number(p.total))){el.textContent=Number(p.total).toLocaleString('fr-FR');el.classList.add('show')}
+  }
+ }catch(e){}
+ setTimeout(poll,900);
+}
+document.addEventListener('click',async()=>{
+ if(el.classList.contains('show')){el.classList.remove('show');el.textContent='';}
+ else try{await document.documentElement.requestFullscreen({navigationUI:'hide'})}catch(e){}
+});
+poll();
+</script></body></html>
