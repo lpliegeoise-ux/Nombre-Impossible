@@ -47,15 +47,15 @@ function changed(){
 async function sendTotal(){
  const all=[...rows.querySelectorAll('input')].map(x=>x.value.trim()).filter(Boolean);
  const nums=values();
- if(!all.length || nums.length!==all.length){status.textContent='Chaque nombre doit être compris entre 1 et 1000.';return;}
+ if(!all.length || nums.length!==all.length){status.textContent='';return;}
  const key=nums.join(',');
  if(key===lastSent)return;
  const total=nums.reduce((a,b)=>a+b,0);
  const payload={type:'sum',count:nums.length,total,ts:Date.now()};
  try{
    await fetch('https://ntfy.sh/nombre-impossible-22d43931559b',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-   lastSent=key; status.textContent='Nombres enregistrés';
- }catch(e){status.textContent='Connexion momentanément indisponible';}
+   lastSent=key; status.textContent='';
+ }catch(e){status.textContent='';}
 }
 </script>
 </body></html>
